@@ -43,7 +43,58 @@
 #include <stdlib.h>
 #include "adc_demo.h"
 
+enum iio_adc_demo_attributes {
+	ADC_CHANNEL_ATTR,
+	ADC_GLOBAL_ATTR,
+};
+
+#define ADC_DEMO_ATTR(_name, _priv) {\
+	.name = _name,\
+	.priv = _priv,\
+	.show = get_demo_attr,\
+	.store = set_demo_attr\
+}
+
+static struct iio_attribute adc_channel_attributes[] = {
+	ADC_DEMO_ATTR("adc_channel_attr", ADC_CHANNEL_ATTR),
+	END_ATTRIBUTES_ARRAY,
+};
+
+static struct iio_attribute adc_global_attributes[] = {
+	ADC_DEMO_ATTR("adc_global_attr", ADC_GLOBAL_ATTR),
+	END_ATTRIBUTES_ARRAY,
+};
+
+static struct scan_type adc_scan_type = {
+	.sign = 's',
+	.realbits = 16,
+	.storagebits = 16,
+	.shift = 0,
+	.is_big_endian = false
+};
+
+static struct iio_channel iio_adc_channels[] = {
+		{
+				.name = "adc_channel_0",
+				.ch_type = IIO_VOLTAGE,
+				.channel = 0,
+				.scan_index = 0,
+				.indexed = true,
+				.scan_type = &adc_scan_type,
+				.attributes = adc_channel_attributes,
+				.ch_out = false
+		}
+};
+
 struct iio_device adc_demo_iio_descriptor = {
+	.num_ch = 1,
+	.channels = iio_adc_channels,
+	.attributes = adc_global_attributes,
+	.debug_attributes = NULL,
+	.buffer_attributes = NULL,
+	.prepare_transfer = update_active_adc_channels,
+	.end_transfer = close_adc_channels,
+	.read_dev = (int32_t (*)())adc_read_samples,
 	.debug_reg_read = (int32_t (*)()) adc_demo_reg_read,
 	.debug_reg_write = (int32_t (*)()) adc_demo_reg_write
 };

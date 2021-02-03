@@ -42,9 +42,30 @@
 /******************************************************************************/
 
 #include <stdlib.h>
+#include <math.h>
 #include "adc_demo.h"
 #include "error.h"
 #include "util.h"
+
+/* Sine values if the user wants to use only ADC*/
+const uint16_t sine_lut[128] = {
+	0x000, 0x064, 0x0C8, 0x12C, 0x18F, 0x1F1, 0x252, 0x2B1,
+	0x30F, 0x36B, 0x3C5, 0x41C, 0x471, 0x4C3, 0x512, 0x55F,
+	0x5A7, 0x5ED, 0x62E, 0x66C, 0x6A6, 0x6DC, 0x70D, 0x73A,
+	0x763, 0x787, 0x7A7, 0x7C2, 0x7D8, 0x7E9, 0x7F5, 0x7FD,
+	0x7FF, 0x7FD, 0x7F5, 0x7E9, 0x7D8, 0x7C2, 0x7A7, 0x787,
+	0x763, 0x73A, 0x70D, 0x6DC, 0x6A6, 0x66C, 0x62E, 0x5ED,
+	0x5A7, 0x55F, 0x512, 0x4C3, 0x471, 0x41C, 0x3C5, 0x36B,
+	0x30F, 0x2B1, 0x252, 0x1F1, 0x18F, 0x12C, 0xC8,  0x64,
+	0x000, 0xF9B, 0xF37, 0xED3, 0xE70, 0xE0E, 0xDAD, 0xD4E,
+	0xCF0, 0xC94, 0xC3A, 0xBE3, 0xB8E, 0xB3C, 0xAED, 0xAA0,
+	0xA58, 0xA12, 0x9D1, 0x993, 0x959, 0x923, 0x8F2, 0x8C5,
+	0x89C, 0x878, 0x858, 0x83D, 0x827, 0x816, 0x80A, 0x802,
+	0x800, 0x802, 0x80A, 0x816, 0x827, 0x83D, 0x858, 0x878,
+	0x89C, 0x8C5, 0x8F2, 0x923, 0x959, 0x993, 0x9D1, 0xA12,
+	0xA58, 0xAA0, 0xAED, 0xB3C, 0xB8E, 0xBE3, 0xC3A, 0xC94,
+	0xCF0, 0xD4E, 0xDAD, 0xE0E, 0xE70, 0xED3, 0xF37, 0xF9B
+};
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -65,6 +86,7 @@ int32_t adc_demo_init(struct adc_demo_desc **desc,
 	if(!adesc)
 		return -ENOMEM;
 
+	adesc->loopback = param->loopback;
 	*desc = adesc;
 
 	return SUCCESS;
@@ -101,6 +123,61 @@ int32_t adc_demo_reg_read(struct adc_demo_desc *desc, uint8_t reg_index,
 	*readval =  desc->reg[reg_index];
 
 	return SUCCESS;
+}
+
+/***************************************************************************//**
+ * @brief update number of active channels
+ * @param dev - physical instance of an adc device
+ * @param mask - the new number of active channels
+ * @return SUCCESS in case of success.
+*******************************************************************************/
+int32_t update_active_adc_channels(void *dev, int32_t mask)
+{
+	struct adc_demo_desc *desc = dev;
+	desc->active_ch = mask;
+
+	return SUCCESS;
+}
+
+/***************************************************************************//**
+ * @brief close all channels
+ * @param dev - physical instance of an adc device
+ * @return SUCCESS in case of success.
+*******************************************************************************/
+int32_t close_adc_channels(void* dev)
+{
+	struct adc_demo_desc *desc = dev;
+	desc->active_ch = 0;
+
+	return SUCCESS;
+}
+
+/***************************************************************************//**
+ * @brief function for reading samples
+ * @param dev - physical instance of adc device
+ * @param buff - buffer for reading samples
+ * @param samples - number of samples to receive
+ * @return SUCCESS in case of success, negative error code otherwise.
+*******************************************************************************/
+int32_t adc_read_samples(void* dev, uint16_t* buff, uint32_t samples)
+{
+	struct adc_demo_desc *desc = dev;
+	uint32_t k = 0;
+
+	if(desc->loopback == NULL)
+	{
+		//default sin function
+		for(k = 0 ; k < samples; k++)
+			buff[k] = k%200;
+
+		return samples;
+	}
+
+	for(int i = 0; i < samples; i++)
+	{
+		buff[k++] = desc->loopback[i%DEFAULT_LOCAL_SAMPLES];
+	}
+	return samples;
 }
 
 /***************************************************************************//**

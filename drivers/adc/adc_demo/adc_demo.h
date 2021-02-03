@@ -51,6 +51,8 @@
 /******************************************************************************/
 
 #define MAX_REG_ADDR		16
+#define DEFAULT_LOCAL_SAMPLES 128
+#define SINE_VECTOR_SIZE 128
 
 /**
  * @struct iio_demo_adc_desc
@@ -59,6 +61,10 @@
 struct adc_demo_desc {
 	/** Dummy registers of device for testing */
 	uint8_t reg[MAX_REG_ADDR];
+	/** Active channel**/
+	uint32_t active_ch;
+	/** Vector for communication between adc&dac */
+	uint16_t *loopback;
 };
 
 /**
@@ -66,6 +72,8 @@ struct adc_demo_desc {
  * @brief iio demo adc configuration.
  */
 struct adc_demo_init_param {
+	/**Vector for communication between adc&dac*/
+	uint16_t *loopback;
 };
 
 /******************************************************************************/
@@ -76,6 +84,13 @@ int32_t adc_demo_init(struct adc_demo_desc **desc,
 		      struct adc_demo_init_param *param);
 
 int32_t adc_demo_remove(struct adc_demo_desc *desc);
+
+
+int32_t update_active_adc_channels(void *dev, int32_t mask);
+
+int32_t close_adc_channels(void* dev);
+
+int32_t adc_read_samples(void* dev, uint16_t* buff, uint32_t samples);
 
 int32_t adc_demo_reg_read(struct adc_demo_desc *desc, uint8_t reg_index,
 			  uint8_t *readval);

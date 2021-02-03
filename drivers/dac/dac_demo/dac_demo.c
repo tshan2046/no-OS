@@ -65,6 +65,7 @@ int32_t dac_demo_init(struct dac_demo_desc **desc,
 	if(!adesc)
 		return -ENOMEM;
 
+	adesc->loopback = param->loopback;
 	*desc = adesc;
 
 	return SUCCESS;
@@ -83,6 +84,43 @@ int32_t dac_demo_remove(struct dac_demo_desc *desc)
 	free(desc);
 
 	return SUCCESS;
+}
+
+/***************************************************************************//**
+ * @brief update number of active channels
+ * @param dev - physical instance of a dac device
+ * @param mask - the new number of active channels
+ * @return SUCCESS in case of success.
+*******************************************************************************/
+int32_t update_active_dac_channels(void *dev, int32_t mask)
+{
+	struct dac_demo_desc *desc = dev;
+	desc->active_ch = mask;
+
+	return SUCCESS;
+}
+
+/***************************************************************************//**
+ * @brief close all channels
+ * @param dev - physical instance of an adc device
+ * @return SUCCESS in case of success.
+*******************************************************************************/
+int32_t close_dac_channels(void* dev)
+{
+	struct dac_demo_desc *desc = dev;
+	desc->active_ch = 0;
+
+	return SUCCESS;
+}
+
+
+int32_t dac_write_samples(void* dev, uint16_t* buff, uint32_t samples)
+{
+	struct dac_demo_desc *desc = dev;
+	uint32_t k = 0;
+
+	for(int i = 0; i < samples; i++)
+		desc->loopback[i% DEFAULT_LOCAL_SAMPLES] = buff[k++];
 }
 
 /***************************************************************************//**
