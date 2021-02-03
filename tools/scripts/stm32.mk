@@ -87,6 +87,7 @@ $(BINARY).gdb:
 	# @echo tb UsageFault_Handler >> $(BINARY).gdb
 	# @echo tb MemManage_Handler >> $(BINARY).gdb
 	# @echo tb BusFault_Handler >> $(BINARY).gdb
+	@echo c >> $(BINARY).gdb
 
 .PHONY: stm32_run
 stm32_run: all openocd_paths $(BINARY).openocd 
