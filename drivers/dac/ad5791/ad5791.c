@@ -160,7 +160,7 @@ int32_t ad5791_set_register_value(struct ad5791_dev *dev,
 	status = spi_write_and_read(dev->spi_desc,
 				    write_command,
 				    3);
-	if(status != 3) {
+	if(status != 0) {
 		return -1;
 	}
 
@@ -169,6 +169,7 @@ int32_t ad5791_set_register_value(struct ad5791_dev *dev,
 
 /***************************************************************************//**
  * @brief Reads the value of a register.
+ * @note DEPRACATED; should use ad5791_get_register_value2 from now on.
  *
  * @param dev              - The device structure.
  * @param register_address - Address of the register.
@@ -191,7 +192,7 @@ int32_t ad5791_get_register_value(struct ad5791_dev *dev,
 	status = spi_write_and_read(dev->spi_desc,
 				    register_word,
 				    3);
-	if(status != 3) {
+	if(status != 0) {
 		return -1;
 	}
 	register_word[0] = 0x00;
@@ -200,7 +201,7 @@ int32_t ad5791_get_register_value(struct ad5791_dev *dev,
 	status = spi_write_and_read(dev->spi_desc,
 				    register_word,
 				    3);
-	if(status != 3) {
+	if(status != 0) {
 		return -1;
 	}
 	data_read = ((int32_t)register_word[0] << 16) |
@@ -208,6 +209,26 @@ int32_t ad5791_get_register_value(struct ad5791_dev *dev,
 		    ((int32_t)register_word[2] <<  0);
 
 	return data_read;
+}
+
+/**
+ * @brief Get register value standard function.
+ * @param [in] dev - Pointer to the driver handler.
+ * @param [in] addr - Address of the register.
+ * @param [out] value - Pointer to the value of the register.
+ * @return 0 in case of success, error code otherwise.
+ */
+int32_t ad5791_get_register_value2(struct ad5791_dev *dev, uint8_t addr,
+				   uint32_t *value)
+{
+	int32_t ret;
+
+	ret = ad5791_get_register_value(dev, addr);
+	if (ret < 0)
+		return ret;
+	*value = ret;
+
+	return 0;
 }
 
 /***************************************************************************//**
